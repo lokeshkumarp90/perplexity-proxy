@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Assistant</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Assistance Style -->
+  <style>
+    :root {
+      --primary: #1877f2;
+      --secondary: #f0f2f5;
+      --assistant: #ece3fc;
+      --user: #def3e0;
+      --border: #e0e2e6;
+      --text: #212529;
+      --bubble-radius: 1.4em;
+    }
+    body {
+      background: var(--secondary);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+    }
+    .app-container {
+      max-width: 850px;
+      margin: 3em auto 2em;
+      background: #fff;
+      border-radius: 1.5em;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.07), 0 1.5px 6px rgba(24,119,242,0.07);
+      display: flex;
+      flex-direction: column;
+      min-height: 70vh;
+    }
+    .header {
+      text-align: center;
+      padding: 2em 2em 0.5em 2em;
+    }
+    .header h2 {
+      letter-spacing: 0.03em;
+      color: var(--primary);
+      margin-bottom: 0.5em;
+      font-weight: 700;
+    }
+    .chat-area {
+      padding: 1em 1em 0 1em;
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35em;
+      background: var(--secondary);
+      border-top-left-radius: 1em;
+      border-top-right-radius: 1em;
+      min-height: 250px;
+      max-height: 360px;
+    }
+    .message {
+      max-width: 80%;
+      padding: 0.6em 1em;
+      margin-bottom: 0.4em;
+      display: inline-block;
+      border-radius: var(--bubble-radius);
+      box-shadow: 0 2px 10px rgba(24,119,242,0.02);
+      font-size: 1em;
+      position: relative;
+      word-break: break-word;
+      animation: fadeIn 0.2s;
+    }
+    .msg-user {
+      background: var(--user);
+      align-self: flex-end;
+      border-bottom-right-radius: 0.3em;
+      border-top-right-radius: var(--bubble-radius);
+    }
+    .msg-assistant {
+      background: var(--assistant);
+      align-self: flex-start;
+      border-bottom-left-radius: 0.3em;
+      border-top-left-radius: var(--bubble-radius);
+    }
+    .timestamp {
+      font-size: 0.75em;
+      color: #a4a6a9;
+      margin-left: 8px;
+      margin-right: 0;
+      vertical-align: middle;
+      user-select: none;
+    }
+    .input-area {
+      display: flex;
+      flex-direction: column;
+      border-top: 1px solid var(--border);
+      background: #fff;
+      border-bottom-right-radius: 1.5em;
+      border-bottom-left-radius: 1.5em;
+      padding: 1em 1em 1em;
+    }
+    textarea {
+      padding: 0.75em 1em;
+      border: 1px solid var(--border);
+      border-radius: 0.7em;
+      resize: none;
+      font-size: 1em;
+      font-family: inherit;
+      height: 48px;
+      margin-bottom: 0.5em;
+      background: #f8fafc;
+      transition: border 0.18s;
+    }
+    textarea:focus {
+      border-color: var(--primary);
+      outline: none;
+      background: #fff;
+    }
+    button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 0.7em;
+      padding: 0.7em 2.1em;
+      font-size: 1em;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      margin-left: auto;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(24,119,242,0.11);
+      transition: background 0.15s;
+    }
+    button:hover {
+      background: #0f66dc;
+    }
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(12px);}
+      100% { opacity: 1; transform: none;}
+    }
+    @media (max-width: 590px) {
+      .app-container { max-width: 100%; margin: 0; border-radius: 0;}
+      .header { padding: 1em 0.2em 0.4em; }
+      .input-area { padding: 1em 0.5em; }
+      .chat-area { padding: 0.8em 0.4em 0 0.4em;}
+    }
+    .welcome-message {
+      color: #6a11cb;
+      text-align: center;
+      font-size: 1.17rem;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      margin-bottom: 1rem;
+      margin-top: 1rem;
+      user-select: none;
+    }
+  </style>
+  <!-- Help Section Style -->
+  <style>
+  /* The Modal (background) */
+  .modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
+    padding-top: 100px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; 
+    height: 100%; 
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+  }
+
+  /* Modal Content */
+  .modal-content {
+    background-color: #fff;
+    margin: auto;
+    padding: 20px;
+    border-radius: 5px;
+    width: 80%;
+    max-width: 600px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  }
+
+  /* Close Button */
+  .close-btn {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .close-btn:hover,
+  .close-btn:focus {
+    color: black;
+    text-decoration: none;
+  }
+  
+  #helpBtn{
+   background-color: #007BFF;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  font-size: 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 6px rgba(0,123,255,0.4);
+  transition: background-color 0.3s ease;
+  }
+</style>
+</head>
+<body>
+<!-- ... (keep your previous <head> and CSS) ... -->
+  <div class="app-container">
+    <!-- ...header, chat-area leftovers... -->
+    <div class="welcome-message">Welcome and Happy to assit you today!</div>
+    <div class="chat-area" id="chat"></div>
+    <form class="input-area" onsubmit="event.preventDefault(); sendMessage();">
+      <textarea id="userInput" rows="2" placeholder="Ask me anything..." required autofocus></textarea>
+      <button type="submit">Send</button>
+    </form>
+  </div>
+ <!-- Trigger/Open The Modal -->
+<!-- <button id="helpBtn">Open Help</button> -->
+
+<button id="helpBtn" type="button">
+	<!-- Help icon (SVG) -->
+	<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+		<circle cx="12" cy="12" r="10"/>
+		<path d="M9.09 9a3 3 0 1 1 5.83 1c-.27 1.07-3 1.5-3 3"/>
+		<line x1="12" y1="17" x2="12" y2="17"/>
+	</svg>
+  Help
+</button>
+
+<!-- The Modal -->
+<div id="helpModal"  class="modal">
+  <div class="modal-content">
+    <span class="close-btn" id="closeHelp">&times;</span>
+    <h2>Instructions</h2>
+    <p>Please follow the below instructions based on the error you recived while trying to use the assistance.</p>
+    <ul>
+      <li>
+	  Error 1: <b>"The string did not match the expected pattern"</b> then Visit <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank" rel="noopener noreferrer">
+       Click "Request temporary access to the demo server"</a>
+	   </li>
+      <li>Error 2: <b>"No reply or an error occured"</b> then reload link again <a href="https://lokeshkumarp90.github.io/MyAssistance/" target="" rel="noopener noreferrer"> Reload the Assistance <a/></li>
+    </ul>
+  </div>
+</div>
+  <script>
+    const messages = [
+      { role: "system", content: "You are a helpful assistant." }
+    ];
+    const chat = document.getElementById('chat');
+    const userInput = document.getElementById('userInput');
+
+    function formatTime() {
+      const now = new Date();
+      return now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    }
+
+    // Basic Markdown to HTML (bullets/numbering only)
+    function simpleMarkdownToHTML(text) {
+      // Convert numbered lists to <ol>
+      text = text.replace(/^\d+\.\s(.+)$/gm, '<li>$1</li>');
+      if (text.match(/<li>/)) text = text.replace(/(<li>.*<\/li>)/gs, '<ol>$1</ol>');
+      // Convert bullet lists to <ul>
+      text = text.replace(/^\s*[-*+]\s(.+)$/gm, '<li>$1</li>');
+      if (text.match(/<li>/)) text = text.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
+      // Bold and italics (optional)
+      text = text.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+      text = text.replace(/\*([^*]+)\*/g, '<i>$1</i>');
+      // Simple paragraph formatting
+      text = text.replace(/\n\n/g, '<br><br>');
+      return text;
+    }
+
+    function appendMessage(content, sender) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'message ' + (sender === 'user' ? 'msg-user' : 'msg-assistant');
+      if (sender === "assistant") {
+        msgDiv.innerHTML = simpleMarkdownToHTML(content) + ` <span class="timestamp">${formatTime()}</span>`;
+      } else {
+        msgDiv.textContent = content + " ";
+        msgDiv.innerHTML += `<span class="timestamp">${formatTime()}</span>`;
+      }
+      chat.appendChild(msgDiv);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const text = userInput.value.trim();
+      if (!text) return;
+      appendMessage(text, 'user');
+      userInput.value = '';
+      userInput.focus();
+      messages.push({ role: "user", content: text });
+
+      appendMessage("Thinking...", "assistant");
+      chat.scrollTop = chat.scrollHeight;
+
+      const endpoint = "https://401ed72e-0f79-4df8-975a-0056609e4cbb-00-3u3o1q1wrmnfv.pike.replit.dev/call-api";
+      const body = {
+        model: "sonar-pro",
+        messages: messages
+      };
+
+      try {
+		
+		 const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages })
+      });
+
+        const result = await response.json();
+        // Remove "Thinking..."
+        const bubbles = document.querySelectorAll('.msg-assistant');
+		if ( bubbles &&  bubbles.length > 0 &&  typeof bubbles[bubbles.length - 1].innerText !== 'undefined'){
+
+        if (bubbles[bubbles.length - 1].innerText.startsWith('Thinking')) {
+          bubbles[bubbles.length - 1].remove();
+        }
+        const reply = (result.choices && result.choices[0] && result.choices[0].message.content) ? result.choices[0].message.content : "No reply or an error occurred.";
+        appendMessage(reply, "assistant");
+        messages.push({ role: "assistant", content: reply });
+		}
+      }
+	  catch (err) {
+        const bubbles = document.querySelectorAll('.msg-assistant');
+		if ( bubbles &&  bubbles.length > 0 &&  typeof bubbles[bubbles.length - 1].innerText !== 'undefined') {			
+        if (bubbles[bubbles.length - 1].innerText.startsWith('Thinking')) {
+          bubbles[bubbles.length - 1].remove();
+        }
+        appendMessage("Error: " + err.message, "assistant");
+		}
+      }
+    }
+	
+	  userInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+		// Disable right click context menu
+  document.addEventListener('contextmenu', event => event.preventDefault());
+
+  // Disable common keyboard shortcuts for devtools
+  document.addEventListener('keydown', function(event) {
+    // F12 key
+    if (event.key === 'F12') {
+      event.preventDefault();
+    }
+    // Ctrl + Shift + I (Inspect)
+    if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'i') {
+      event.preventDefault();
+    }
+    // Ctrl + Shift + J (Console)
+    if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'j') {
+      event.preventDefault();
+    }
+    // Ctrl + U (View Source)
+    if (event.ctrlKey && event.key.toLowerCase() === 'u') {
+      event.preventDefault();
+    }
+  });
+    
+  </script>
+  <script>
+
+  // Get modal and buttons
+  const modal = document.getElementById("helpModal");
+  const btn = document.getElementById("helpBtn");
+  const closeBtn = document.getElementById("closeHelp");
+
+  // When the user clicks on the button, open the modal
+  btn.onclick = () => {
+    modal.style.display = "block";
+  };
+
+  // When the user clicks on the close button, close the modal
+  closeBtn.onclick = () => {
+    modal.style.display = "none";
+  };
+
+  // When the user clicks anywhere outside the modal content, close it
+  window.onclick = (event) => {
+    if (event.target === modal) {
+      modal.style.display = "none";
+    }
+  };
+</script>
+</body>
+</html>
+
